@@ -28,6 +28,7 @@ require 'ruby-prof/printers/flat_printer_with_line_numbers'
 require 'ruby-prof/printers/graph_html_printer'
 require 'ruby-prof/printers/graph_printer'
 require 'ruby-prof/printers/multi_printer'
+require 'ruby-prof/printers/splunk_virtual_printer'
 
 module RubyProf
   # Checks if the user specified the clock mode via
