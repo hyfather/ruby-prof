@@ -49,7 +49,7 @@ module RubyProf
           "name": "%s"
         }) % [
               thread.id,
-              thread.fiber_id unless thread.id == thread.fiber_id,
+              thread.fiber_id,
               thread.total_time,
               method.self_time / total_time * 100, # %self
               method.total_time,                   # total
