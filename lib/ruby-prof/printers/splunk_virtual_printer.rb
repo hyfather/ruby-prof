@@ -1,5 +1,10 @@
 # encoding: utf-8
 
+require 'uri'
+require 'net/http'
+require 'net/https'
+require 'json'
+
 module RubyProf
   # Generates flat[link:files/examples/flat_txt.html] profile reports as text.
   # To use the flat printer:
@@ -61,11 +66,46 @@ module RubyProf
               method_name(method)                  # name
              ]
         json_event = JSON.parse(json_string)
-        @output << json_event.to_hash.to_s
+
+        forward_to_splunk(json_event, @options)
       end
     end
 
     def print_footer(thread)
+      true
+    end
+
+    def forward_to_splunk(payload, params={})
+      default_host = `hostname` rescue nil
+      defaults = {
+        :splunk_base_url => "https://localhost:8088",
+        :splunk_endpoint => "/services/receivers/token/event",
+        :splunk_auth => "Splunk DEADBEEF-CAFEBABE-CAFED00D",
+        :host => default_host,
+        :source => $0,
+        :sourcetype => "apm_ruby"
+      }
+      options = defaults.merge params
+
+      url = URI.parse(options[:splunk_base_url] + options[:splunk_endpoint])
+      http = Net::HTTP.new(url.host, url.port)
+      http.use_ssl = false
+      data = {
+        "event" => payload,
+        "host" => options[:host],
+        "source" => options[:source],
+        "sourcetype" => options[:sourcetype]
+      }.to_json
+
+      headers = {
+        'Authorization' => options[:splunk_auth]
+      }
+
+      resp = http.post(url.path, data, headers)
+      if resp.code != "200"
+        $stderr.puts("Failure when forwarding data to splunk. Response = #{resp.body}. Options used = #{options.to_s}.")
+      end
+
       true
     end
   end
