@@ -57,7 +57,7 @@ module RubyProf
               method.wait_time,                    # wait
               method.children_time,                # children
               method.called,                       # calls
-              method.recursive? ? "true" : "false",# cycle
+              method.recursive? ? "true" : "false",
               method_name(method)                  # name
              ]
         json_event = JSON.parse(json_string)
