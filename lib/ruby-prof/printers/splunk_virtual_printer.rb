@@ -33,6 +33,7 @@ module RubyProf
       methods = thread.methods.sort_by(&sort_method).reverse
 
       sum = 0
+      json_events = []
       methods.each do |method|
         self_percent = (method.self_time / total_time) * 100
         next if self_percent < min_percent
@@ -65,10 +66,9 @@ module RubyProf
               method.recursive? ? "true" : "false",
               method_name(method)                  # name
              ]
-        json_event = JSON.parse(json_string)
-
-        forward_to_splunk(json_event, @options)
+        json_events << JSON.parse(json_string)
       end
+      forward_to_splunk(json_events, @options)
     end
 
     def print_footer(thread)
@@ -105,7 +105,6 @@ module RubyProf
       if resp.code != "200"
         $stderr.puts("Failure when forwarding data to splunk. Response = #{resp.body}. Options used = #{options.to_s}.")
       end
-
       true
     end
   end
