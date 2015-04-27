@@ -90,7 +90,7 @@ module RubyProf
       uri = URI.parse(options[:splunk_base_url] + options[:splunk_endpoint])
       Net::HTTP.start(uri.host, uri.port) do |http|
         http.use_ssl = false
-        request = Net::HTTP::POST.new uri
+        request = Net::HTTP::Post.new uri
         request.initialize_http_header({
           'Authorization' => options[:splunk_auth]
         })
