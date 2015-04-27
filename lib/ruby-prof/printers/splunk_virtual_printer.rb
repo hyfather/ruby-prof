@@ -103,6 +103,7 @@ module RubyProf
             "sourcetype" => options[:sourcetype]
           }.to_json
 
+          request.body = data
           resp = http.request request
           if resp.code != "200"
             $stderr.puts("Failure when forwarding data to splunk.\
