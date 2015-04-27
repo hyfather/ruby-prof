@@ -87,25 +87,31 @@ module RubyProf
       }
       options = defaults.merge params
 
-      url = URI.parse(options[:splunk_base_url] + options[:splunk_endpoint])
-      http = Net::HTTP.new(url.host, url.port)
-      http.use_ssl = false
-      data = {
-        "event" => payload,
-        "host" => options[:host],
-        "source" => options[:source],
-        "sourcetype" => options[:sourcetype]
-      }.to_json
+      uri = URI.parse(options[:splunk_base_url] + options[:splunk_endpoint])
+      Net::HTTP.start(uri.host, uri.port) do |http|
+        http.use_ssl = false
+        request = Net::HTTP::POST.new uri
+        request.initialize_http_header({
+          'Authorization' => options[:splunk_auth]
+        })
 
-      headers = {
-        'Authorization' => options[:splunk_auth]
-      }
+        [*payload].each do |j|
+          data = {
+            "event" => j,
+            "host" => options[:host],
+            "source" => options[:source],
+            "sourcetype" => options[:sourcetype]
+          }.to_json
 
-      resp = http.post(url.path, data, headers)
-      if resp.code != "200"
-        $stderr.puts("Failure when forwarding data to splunk. Response = #{resp.body}. Options used = #{options.to_s}.")
-      end
-      true
-    end
-  end
-end
+          resp = http.request request
+          if resp.code != "200"
+            $stderr.puts("Failure when forwarding data to splunk.\
+Response = #{resp.body}. Options used = #{options.to_s}.")
+            return false # from forward_to_splunk
+          end
+        end # payload.each
+      end # http
+      return true
+    end # forward_to_splunk
+  end # class
+end # module
